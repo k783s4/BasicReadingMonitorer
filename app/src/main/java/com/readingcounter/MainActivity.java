@@ -3,8 +3,10 @@ package com.readingcounter;
 import android.app.Notification;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Display;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -15,8 +17,8 @@ import java.util.TimerTask;
 public class MainActivity extends AppCompatActivity {
     TextView average,pageTime,breakTime,improvement;
     Button start,np,pause;
-    Watch w;
-    int aver = 0;
+    Watch w,pw;
+    int aver,minutesReading,minutesBreaking,secondsReading,secondsBreaking = 0;
     boolean timerStarted = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,11 +44,11 @@ public class MainActivity extends AppCompatActivity {
                         start.setBackgroundColor(Color.RED);
                     }
                     else{
-                        int minutes = w.minutes;
-                        int seconds = w.seconds;
+                        minutesReading = w.minutes;
+                        secondsReading = w.seconds;
                         w.StopTimer();
                         w.Reset();
-                        pageTime.setText(minutes+":"+seconds);
+                        pageTime.setText(minutesReading+":"+secondsReading);
                         timerStarted = false;
                         start.setText("Start reading");
                         start.setBackgroundColor(Color.GREEN);
@@ -61,8 +63,35 @@ public class MainActivity extends AppCompatActivity {
                 }else{
                     aver = (aver + (w.minutes * 60 + w.seconds))/2;
                 }
+                improvement.setText(String.valueOf((float)aver/(w.minutes * 60 + w.seconds)));
+                if((aver/(w.minutes * 60 + w.seconds)) >= 1){
+                    improvement.setTextColor(Color.GREEN);
+                }
+                else{
+                    improvement.setTextColor(Color.RED);
+                }
                 w.Reset();
-                average.setText((int)Math.floor(aver/60) + ":" + aver%60);
+                average.setText(String.valueOf((int)Math.floor(aver/60) + ":" + aver%60));
+            }
+        });
+        pause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                pw = new Watch();
+                if(pause.getText().equals("Break")) {
+                    minutesReading = w.minutes;
+                    secondsReading = w.seconds;
+                    w.StopTimer();
+                    pause.setText("Continue Reading");
+                    pw.StartCount(breakTime);
+                }
+                else{
+                    pw.StopTimer();
+                    pause.setText("Break");
+                    w = new Watch();
+                    w.StartCount(pageTime);
+                }
+
             }
         });
 
@@ -87,6 +116,7 @@ class Watch{
                 ti.setText(minutes + ":" + seconds);
             }
         },0,1000);}
+
         public void StopTimer(){
         timer.cancel();
         timer = null;

@@ -13,7 +13,6 @@ import java.util.TimerTask;
 public class MainActivity extends AppCompatActivity {
     TextView average, pageTime, breakTime, improvement;
     Button start, np, pause;
-    Watch w;
     int aver, minutesReading, minutesBreaking, secondsReading, secondsBreaking = 0;
     boolean timerStarted = false;
 
@@ -30,20 +29,24 @@ public class MainActivity extends AppCompatActivity {
         breakTime = (TextView) findViewById(R.id.breakTime);
         improvement = (TextView) findViewById(R.id.Improvement);
 
+        average.setText("0");
+        pageTime.setText("0");
+        breakTime.setText("0");
+        improvement.setText("0");
+
         start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (timerStarted == false) {
+                if (!timerStarted) {
                     timerStarted = true;
-                    w = new Watch();
-                    w.StartCount(pageTime, 0, 0);
+                    Reset();
+                   StartCount(pageTime, 0, 0);
                     start.setText("Stop reading");
                     start.setBackgroundColor(Color.RED);
                 } else {
-                    minutesReading = w.minutes;
-                    secondsReading = w.seconds;
-                    w.StopTimer();
-                    w = new Watch();
+                    minutesReading = minutes;
+                    secondsReading = seconds;
+                   StopTimer();
                     pageTime.setText(minutesReading + ":" + secondsReading);
                     timerStarted = false;
                     start.setText("Start reading");
@@ -55,19 +58,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (aver == 0) {
-                    aver = ((minutesReading+w.minutes) * 60 + (secondsReading+w.seconds));
+                    aver = ((minutesReading +minutes) * 60 + (secondsReading +seconds));
                 } else {
-                    aver = (aver + ((minutesReading+w.minutes) * 60 + (secondsReading+w.seconds))) / 2;
+                    aver = (aver + ((minutesReading +minutes) * 60 + (secondsReading +seconds))) / 2;
                 }
-                improvement.setText(String.valueOf((float) aver / ((minutesReading+w.minutes) * 60 + (secondsReading+w.seconds))));
-                if ((aver / ((minutesReading+w.minutes) * 60 + (secondsReading+w.seconds))) >= 1) {
+                improvement.setText(String.valueOf((float) aver / ((minutesReading +minutes) * 60 + (secondsReading +seconds))));
+                if ((aver / ((minutesReading +minutes) * 60 + (secondsReading +seconds))) >= 1) {
                     improvement.setTextColor(Color.GREEN);
+                    improvement.setText("+" + improvement.getText());
                 } else {
                     improvement.setTextColor(Color.RED);
+                    improvement.setText("-" + improvement.getText());
                 }
-                w.StopTimer();
-                w = new Watch();
-                w.StartCount(pageTime,0,0);
+               StopTimer();
+                Reset();
+               StartCount(pageTime, 0, 0);
                 average.setText(String.valueOf((int) Math.floor(aver / 60) + ":" + aver % 60));
             }
         });
@@ -75,33 +80,30 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (pause.getText().equals("Break")) {
-                    minutesReading = w.minutes;
-                    secondsReading = w.seconds;
-                    w.StopTimer();
-                    w = new Watch();
+                    minutesReading =minutes;
+                    secondsReading =seconds;
+                   StopTimer();
                     pause.setText("Continue Reading");
-                    w.StartCount(breakTime, minutesBreaking, secondsBreaking);
+                    Reset();
+                   StartCount(breakTime, minutesBreaking, secondsBreaking);
                 } else {
-                    minutesBreaking = w.minutes;
-                    secondsBreaking = w.seconds;
-                    w.StopTimer();
+                    minutesBreaking =minutes;
+                    secondsBreaking =seconds;
+                   StopTimer();
                     pause.setText("Break");
-                    w = new Watch();
-                    w.StartCount(pageTime, minutesReading, secondsReading);
+                    Reset();
+                   StartCount(pageTime, minutesReading, secondsReading);
                 }
 
             }
         });
 
     }
-}
-
-class Watch {
     public int seconds = -1;
     public int minutes = 0;
     private Timer timer;
 
-    public void StartCount(final TextView ti, final int addidtionMinutes, final int additionSeconds) {
+    public void StartCount(final TextView ti, final int additionMinutes, final int additionSeconds) {
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
@@ -111,13 +113,21 @@ class Watch {
                     seconds = 0;
                     minutes++;
                 }
-                ti.setText((addidtionMinutes + minutes) + ":" + (additionSeconds + seconds));
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ti.setText((additionMinutes+ minutes) + ":" + (additionSeconds + seconds));
+                    }
+                });
             }
         }, 0, 1000);
     }
+    public void Reset(){minutes = 0; seconds = 0;}
 
     public void StopTimer() {
         timer.cancel();
         timer = null;
     }
 }
+
+

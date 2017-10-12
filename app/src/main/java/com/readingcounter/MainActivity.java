@@ -15,6 +15,7 @@ public class MainActivity extends AppCompatActivity {
     Button start, np, pause;
     int aver, minutesReading, minutesBreaking, secondsReading, secondsBreaking = 0;
     boolean timerStarted = false;
+    float averImp = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,15 +39,18 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (!timerStarted) {
+                    breakTime.setText("0:0");
+                    minutesBreaking = 0;
+                    secondsBreaking = 0;
                     timerStarted = true;
                     Reset();
-                   StartCount(pageTime, 0, 0);
+                    StartCount(pageTime, 0, 0);
                     start.setText("Stop reading");
                     start.setBackgroundColor(Color.RED);
                 } else {
-                    minutesReading = minutes;
-                    secondsReading = seconds;
-                   StopTimer();
+                    minutesReading = minutes + minutesReading;
+                    secondsReading = seconds + secondsReading;
+                    StopTimer();
                     pageTime.setText(minutesReading + ":" + secondsReading);
                     timerStarted = false;
                     start.setText("Start reading");
@@ -58,47 +62,51 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (aver == 0) {
-                    aver = ((minutesReading +minutes) * 60 + (secondsReading +seconds));
+                    aver = ((minutesReading + minutes) * 60 + (secondsReading + seconds));
                 } else {
-                    aver = (aver + ((minutesReading +minutes) * 60 + (secondsReading +seconds))) / 2;
+                    aver = (aver + ((minutesReading + minutes) * 60 + (secondsReading + seconds))) / 2;
                 }
-                improvement.setText(String.valueOf((float) aver / ((minutesReading +minutes) * 60 + (secondsReading +seconds))));
-                if ((aver / ((minutesReading +minutes) * 60 + (secondsReading +seconds))) >= 1) {
+                improvement.setText(String.valueOf((float) aver / ((minutesReading + minutes) * 60 + (secondsReading + seconds))));
+                if ((aver / ((minutesReading + minutes) * 60 + (secondsReading + seconds))) >= 1) {
                     improvement.setTextColor(Color.GREEN);
                     improvement.setText("+" + improvement.getText());
                 } else {
                     improvement.setTextColor(Color.RED);
                     improvement.setText("-" + improvement.getText());
                 }
-               StopTimer();
-                Reset();
-               StartCount(pageTime, 0, 0);
                 average.setText(String.valueOf((int) Math.floor(aver / 60) + ":" + aver % 60));
+                averImp = ((averImp + Float.parseFloat(improvement.getText().toString().split("[+-]")[1]))/2);
+                average.setText(average.getText() + " Imp:" + averImp);
+                StopTimer();
+                Reset();
+                StartCount(pageTime, 0, 0);
+
             }
         });
         pause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (pause.getText().equals("Break")) {
-                    minutesReading =minutes;
-                    secondsReading =seconds;
-                   StopTimer();
+                    minutesReading = minutes + minutesReading;
+                    secondsReading = seconds + secondsReading;
+                    StopTimer();
                     pause.setText("Continue Reading");
                     Reset();
-                   StartCount(breakTime, minutesBreaking, secondsBreaking);
+                    StartCount(breakTime, minutesBreaking, secondsBreaking);
                 } else {
-                    minutesBreaking =minutes;
-                    secondsBreaking =seconds;
-                   StopTimer();
+                    minutesBreaking = minutes + minutesBreaking;
+                    secondsBreaking = seconds + secondsBreaking;
+                    StopTimer();
                     pause.setText("Break");
                     Reset();
-                   StartCount(pageTime, minutesReading, secondsReading);
+                    StartCount(pageTime, minutesReading, secondsReading);
                 }
 
             }
         });
 
     }
+
     public int seconds = -1;
     public int minutes = 0;
     private Timer timer;
@@ -116,13 +124,17 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        ti.setText((additionMinutes+ minutes) + ":" + (additionSeconds + seconds));
+                        ti.setText((additionMinutes + minutes) + ":" + (additionSeconds + seconds));
                     }
                 });
             }
         }, 0, 1000);
     }
-    public void Reset(){minutes = 0; seconds = 0;}
+
+    public void Reset() {
+        minutes = 0;
+        seconds = -1;
+    }
 
     public void StopTimer() {
         timer.cancel();
